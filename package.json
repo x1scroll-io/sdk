@@ -1,0 +1,19 @@
+{
+  "name": "@x1scroll/sdk",
+  "version": "1.0.0",
+  "description": "Official SDK for the x1scroll.io Task Board — discover tasks, claim bounties, submit work, earn XNT",
+  "main": "src/index.js",
+  "types": "types/index.d.ts",
+  "license": "MIT",
+  "keywords": ["x1scroll", "x1", "blockchain", "solana", "svm", "agent", "taskboard", "bounty"],
+  "homepage": "https://x1scroll.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/x1scroll-io/sdk"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0",
+    "bs58": "^5.0.0",
+    "tweetnacl": "^1.0.3"
+  }
+}
