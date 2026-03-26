@@ -377,6 +377,81 @@ class X1ScrollSDK {
   }
 
   // ─────────────────────────────────────────────
+  // Price Feed
+  // ─────────────────────────────────────────────
+
+  /**
+   * Get live prices for XNT and major crypto assets.
+   *
+   * Fetches from the x1scroll.io /api/prices endpoint (which sources XNT from
+   * xDEX API and BTC/ETH/SOL from CoinGecko). Results are cached server-side
+   * for 30 seconds.
+   *
+   * Inspired by Jack's oracle-v2 on-chain price feed design (5 relay slots per
+   * asset). Falls back gracefully if individual assets are unavailable.
+   *
+   * @param {string[]} [assets=['BTC','ETH','SOL','XNT']]  Assets to fetch
+   * @returns {Promise<PriceMap>}
+   *   Object keyed by asset symbol: { BTC: { price, timestamp }, XNT: { price, timestamp }, … }
+   *
+   * @example
+   * const prices = await sdk.getPrices();
+   * console.log(prices.XNT.price); // e.g. 0.36
+   * console.log(prices.BTC.price); // e.g. 87000
+   *
+   * // Single asset
+   * const [xnt] = await sdk.getPrices(['XNT']);
+   * console.log(xnt);
+   */
+  async getPrices(assets = ['BTC', 'ETH', 'SOL', 'XNT']) {
+    // 1. Try fetching from the x1scroll.io /api/prices endpoint (server-side cached)
+    let raw;
+    try {
+      raw = await this._fetch('/api/prices');
+    } catch (_err) {
+      // Endpoint unavailable — fall through to direct fetch below
+      raw = null;
+    }
+
+    // 2. If server fetch failed, hit external APIs directly
+    if (!raw) {
+      raw = {};
+      const XDEX_XNT  = 'https://api.xdex.xyz/api/token-price/price?network=X1+Mainnet&token_address=So11111111111111111111111111111111111111112';
+      const COINGECKO = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd';
+
+      const [xntRes, cgRes] = await Promise.allSettled([
+        fetch(XDEX_XNT).then(r => r.json()),
+        fetch(COINGECKO).then(r => r.json()),
+      ]);
+
+      if (xntRes.status === 'fulfilled' && xntRes.value?.data?.price) {
+        raw.XNT = parseFloat(xntRes.value.data.price);
+      }
+      if (cgRes.status === 'fulfilled') {
+        const cg = cgRes.value;
+        raw.BTC = cg?.bitcoin?.usd  ?? null;
+        raw.ETH = cg?.ethereum?.usd ?? null;
+        raw.SOL = cg?.solana?.usd   ?? null;
+      }
+      raw.timestamp = new Date().toISOString();
+    }
+
+    // 3. Build result — filter to requested assets, normalise to { price, timestamp } shape
+    const result = {};
+    for (const asset of assets) {
+      const sym = asset.toUpperCase();
+      if (raw[sym] != null) {
+        result[sym] = {
+          price:     raw[sym],
+          timestamp: raw.timestamp || new Date().toISOString(),
+          source:    sym === 'XNT' ? 'xdex' : 'coingecko',
+        };
+      }
+    }
+    return result;
+  }
+
+  // ─────────────────────────────────────────────
   // Chain Stats
   // ─────────────────────────────────────────────
 

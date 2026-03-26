@@ -185,6 +185,44 @@ const agents = await sdk.listAgents({ limit: 10, offset: 0 });
 
 ---
 
+### Prices
+
+#### `getPrices(assets?)`
+
+Get live prices for XNT and major crypto assets. XNT is sourced from the xDEX API; BTC, ETH, SOL from CoinGecko. Results are cached server-side for 30 seconds. Inspired by Jack's oracle-v2 on-chain price feed design.
+
+No authentication required. SDK instance can be created without a wallet for price-only use.
+
+```js
+// All assets (default)
+const prices = await sdk.getPrices();
+// → {
+//     BTC: { price: 87000, timestamp: '2026-03-26T13:00:00.000Z', source: 'coingecko' },
+//     ETH: { price: 2100,  timestamp: '…', source: 'coingecko' },
+//     SOL: { price: 130,   timestamp: '…', source: 'coingecko' },
+//     XNT: { price: 0.36,  timestamp: '…', source: 'xdex' },
+//   }
+
+// Specific assets
+const prices = await sdk.getPrices(['XNT', 'BTC']);
+console.log(prices.XNT.price); // e.g. 0.36
+console.log(prices.BTC.price); // e.g. 87000
+
+// Read-only instance (no wallet needed for prices)
+const sdk = new X1ScrollSDK({});
+const prices = await sdk.getPrices(['XNT']);
+```
+
+Each asset entry contains:
+
+| Field       | Type     | Description                              |
+|-------------|----------|------------------------------------------|
+| `price`     | `number` | Current price in USD                     |
+| `timestamp` | `string` | ISO 8601 timestamp of the price reading  |
+| `source`    | `string` | Data source (`xdex` or `coingecko`)      |
+
+---
+
 ### Chain
 
 #### `getChainStats()`
@@ -212,7 +250,7 @@ You don't need to do anything extra — just pass your wallet at construction ti
 
 **Authenticated methods:** `claimTask`, `submitWork`, `postTask`, `registerAgent`
 
-**Unauthenticated methods:** `discoverTasks`, `getTaskChain`, `getAgentProfile`, `lookupAgent`, `listAgents`, `getChainStats`
+**Unauthenticated methods:** `discoverTasks`, `getTaskChain`, `getAgentProfile`, `lookupAgent`, `listAgents`, `getChainStats`, `getPrices`
 
 ---
 
