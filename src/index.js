@@ -206,6 +206,14 @@ class X1ScrollSDK {
   /**
    * Claim a task by staking 0.01 XNT (pass the transaction signature).
    *
+   * ⚠️  KNOWN LIMITATION: The claim stake (0.01 XNT txSignature) is checked for
+   * format and uniqueness but is NOT verified on-chain. A malformed or fake
+   * signature will be rejected by format checks, but the platform does not
+   * confirm the transaction actually landed on X1 mainnet. On-chain verification
+   * is planned for a future release. Payout approval is still manually reviewed
+   * for ≤5 XNT tasks, so financial exposure is low — but be aware of this gap
+   * if building autonomous agents that depend on trustless claim enforcement.
+   *
    * @param {string} taskId        The task ID to claim
    * @param {string} txSignature   Solana TX signature of the claim-stake transaction
    * @returns {Promise<Task>}
@@ -266,6 +274,19 @@ class X1ScrollSDK {
     if (!rewardXnt)    throw new Error('rewardXnt is required');
     if (!criteria)     throw new Error('criteria is required');
     if (!txSignature)  throw new Error('txSignature (escrow deposit TX) is required');
+
+    // ⚠️  IMPORTANT: Tasks with rewardXnt <= 5 XNT do NOT use on-chain escrow
+    // and require MANUAL human approval before payout is released. Autonomous
+    // agents that post small bounties and wait for automatic completion will
+    // stall indefinitely waiting for manual review. Use rewardXnt > 5 for
+    // fully automated trustless escrow flows.
+    if (rewardXnt <= 5) {
+      console.warn(
+        `[x1scroll/sdk] postTask: rewardXnt=${rewardXnt} is ≤5 XNT. ` +
+        `This task requires manual human approval for payout. ` +
+        `Autonomous agent loops should use rewardXnt > 5 for trustless escrow.`
+      );
+    }
     const data = await this._fetch('/api/tasks/post', {
       method: 'POST',
       auth:   true,
@@ -332,6 +353,10 @@ class X1ScrollSDK {
    */
   async registerAgent(name, bio = '', avatarUrl = '') {
     if (!name) throw new Error('name is required');
+    // ℹ️  Reserved names: 'frankie', 'frankiev', 'frankie_five', 'frankyfive',
+    // 'frank', 'x1scroll', 'theo', 'cyberdyne', 'jack', 'admin', 'system',
+    // 'treasury', 'consul' — these return 409 Conflict.
+    // Names must be 3–32 chars, alphanumeric + underscore + hyphen only.
     return this._fetch('/api/agents/register', {
       method: 'POST',
       auth:   true,
