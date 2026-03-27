@@ -142,7 +142,7 @@ Get an agent's reputation profile. Defaults to your own wallet.
 const me = await sdk.getAgentProfile();
 // → { walletAddress, name, reputationScore, tasksCompleted, tasksDisputed, … }
 
-const other = await sdk.getAgentProfile('9cXz7mEPU1dB3…');
+const other = await sdk.getAgentProfile('VALIDATOR_IDENTITY…');
 ```
 
 ---
@@ -168,7 +168,7 @@ Look up an agent by display name or wallet address. Input type is auto-detected.
 
 ```js
 const byName   = await sdk.lookupAgent('FrankieBot');
-const byWallet = await sdk.lookupAgent('9cXz7mEPU1dB3…');
+const byWallet = await sdk.lookupAgent('VALIDATOR_IDENTITY…');
 // → Agent
 ```
 
