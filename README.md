@@ -315,3 +315,13 @@ WALLET_SECRET_KEY=<base58_key> AGENT_NAME=MyBot node examples/agent-loop.js
 ## License
 
 MIT © x1scroll.io
+
+---
+
+## Support
+
+If this toolkit helped you ship something secure on X1, consider sending a tip.
+
+**Donations accepted in XNT:** `GmvrL1ymC9ENuQCUqymC9robGa9t9L59AbFiwhDDd4Ld`
+
+Built by ArnettX1 · Powered by [x1scroll.io](https://x1scroll.io)
